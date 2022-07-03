@@ -13,9 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.modifier.modifierLocalOf
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,26 +27,31 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mynewapp.MockData
 import com.example.mynewapp.MockData.getTimeAgo
 import com.example.mynewapp.NewsData
+import com.example.mynewapp.R
+import com.example.mynewapp.network.models.TopNewsArticle
 import com.example.mynewapp.ui.Navigation
+import com.skydoves.landscapist.coil.CoilImage
 
 
 @Composable
 
-fun TopNews(navController: NavController) {
+fun TopNews(navController: NavController, article:List<TopNewsArticle>) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = " Top News", fontWeight = FontWeight.SemiBold)
         LazyColumn{
-            items(MockData.topNewsList){newsData
+            items(article.size){
+                    index
                 ->
-                TopNewsItem(newsData = newsData, onNewsClicked = {
-                    navController.navigate("Detail/${newsData.id}")
+                TopNewsItem(newsData = article[index],
+                onNewsClicked = {
+                    navController.navigate("Detail/$index")
                 })
             } }
     }
 }
 
 @Composable
-fun TopNewsItem(newsData: NewsData,onNewsClicked: ()->Unit = {}) {
+fun TopNewsItem(newsData: TopNewsArticle?,onNewsClicked: ()->Unit = {}) {
     Box(
         modifier = Modifier
             .height(200.dp)
@@ -53,10 +60,12 @@ fun TopNewsItem(newsData: NewsData,onNewsClicked: ()->Unit = {}) {
                 onNewsClicked()
             }
     ) {
-        Image(
-            painter = painterResource(id = newsData.image),
+        com.skydoves.landscapist.coil.CoilImage(
+            imageModel = newsData!!.urlToImage,
             contentDescription = "",
-            contentScale = ContentScale.FillBounds
+            contentScale = ContentScale.Crop,
+            error = ImageBitmap.imageResource(id = R.drawable.breaking_news),
+            placeHolder = ImageBitmap.imageResource(id = R.drawable.breaking_news)
         )
         Column(
             modifier = Modifier
@@ -64,9 +73,9 @@ fun TopNewsItem(newsData: NewsData,onNewsClicked: ()->Unit = {}) {
                 .padding(top = 16.dp, start = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = MockData.stringToDate(newsData.publishedAt).getTimeAgo(), color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(text = MockData.stringToDate(newsData.publishedAt!!).getTimeAgo(), color = Color.White, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(80.dp))
-            Text(text = newsData.title, color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(text = newsData.title!!, color = Color.White, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -74,8 +83,7 @@ fun TopNewsItem(newsData: NewsData,onNewsClicked: ()->Unit = {}) {
 @Preview(showBackground = true)
 @Composable
 fun TopNewsPreview() {
-    TopNewsItem(NewsData(
-        8,
+    TopNewsItem(TopNewsArticle(
         author = "CBSBoston.com Staff",
         title = "Principal Beaten Unconscious At Dorchester School; Classes Canceled Thursday - CBS Boston",
         description = "Principal Patricia Lampron and another employee were assaulted at Henderson Upper Campus during dismissal on Wednesday.",
